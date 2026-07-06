@@ -59,7 +59,9 @@
   .modal .box { background:var(--bg); border-radius:20px; padding:26px 24px; max-width:360px; width:100%; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
   .modal h2 { margin:0 0 6px; font-size:24px; }
   .modal .answer { font-size:15px; color:var(--muted); margin:0 0 14px; }
-  .modal .grid { font-size:22px; line-height:1.3; letter-spacing:2px; margin:10px 0 18px; }
+  .modal .grid { font-size:22px; line-height:1.3; letter-spacing:2px; margin:10px 0 14px; }
+  .streak { color:#f2a33c; font-weight:900; font-size:19px; margin:0 0 14px; }
+  .next-note { color:var(--muted); font-size:13px; margin:0 0 16px; }
   .btn { display:inline-block; border:none; cursor:pointer; background:var(--accent); color:#fff; font-size:16px; font-weight:800;
     padding:14px 26px; border-radius:999px; text-decoration:none; width:100%; margin-bottom:10px; }
   .btn.x { background:#000; }
@@ -120,6 +122,8 @@
     <h2 id="mTitle"></h2>
     <p class="answer" id="mAnswer"></p>
     <div class="grid" id="mGrid"></div>
+    <p class="streak" id="mStreak" hidden></p>
+    <p class="next-note" id="mNext" hidden>あすの朝、あたらしい「今日のことば」がでるよ🌅</p>
     <a class="btn x" id="shareX" target="_blank" rel="noopener">𝕏 で結果をシェア</a>
     <div class="copied" id="copied"></div>
     <button class="btn ghost" id="againBtn">もう1問あそぶ（練習）</button>
@@ -239,13 +243,36 @@
   }
 
   const EMO={hit:"🟩",near:"🟧",miss:"⬛"};
+  function updateStreak(){
+    // 連続クリア日数（今日のことばを勝ったときのみ）
+    let s = { last: -999, n: 0 };
+    try { s = JSON.parse(localStorage.getItem("ka_streak")) || s; } catch(e){}
+    if (s.last === dayNo) { /* 今日はカウント済み */ }
+    else if (s.last === dayNo - 1) { s.n = (s.n||0) + 1; s.last = dayNo; }
+    else { s.n = 1; s.last = dayNo; }
+    try { localStorage.setItem("ka_streak", JSON.stringify(s)); } catch(e){}
+    return s.n;
+  }
+
   function endGame(win){
     document.getElementById("mTitle").textContent = win ? `クリア！${row+1>TRIES?TRIES:row+1}回で正解 🎉` : "ざんねん…";
     document.getElementById("mAnswer").textContent = `こたえ: ${answer}`;
     const gridRows = guesses.filter(Boolean).map(r=>r.map(s=>EMO[s]).join("")).join("\n");
     document.getElementById("mGrid").textContent = gridRows;
+
+    let streakN = 0;
+    const mStreak = document.getElementById("mStreak"), mNext = document.getElementById("mNext");
+    mStreak.hidden = true; mNext.hidden = true;
+    if (dailyMode && win) {
+      streakN = updateStreak();
+      mStreak.textContent = `🔥 ${streakN}日連続クリア！`;
+      mStreak.hidden = false;
+      mNext.hidden = false;
+    }
+
     const tries = win ? `${guesses.filter(Boolean).length}/${TRIES}` : `X/${TRIES}`;
-    const head = dailyMode ? `ことばアタック No.${dayNo} ${tries}` : `ことばアタック（練習） ${tries}`;
+    const streakTxt = (dailyMode && win && streakN > 1) ? ` 🔥${streakN}日連続` : "";
+    const head = dailyMode ? `ことばアタック No.${dayNo} ${tries}${streakTxt}` : `ことばアタック（練習） ${tries}`;
     const shareText = `${head}\n${gridRows}\n`;
     document.getElementById("shareX").href =
       `https://x.com/intent/post?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent("https://nc16e113-hue.github.io/kotoba-attack/")}`;
