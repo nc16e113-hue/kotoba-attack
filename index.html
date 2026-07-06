@@ -32,7 +32,9 @@
   body { margin:0; background:var(--bg); color:var(--text); min-height:100vh;
     font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Segoe UI", sans-serif; }
   .wrap { max-width: 480px; margin:0 auto; padding: 14px 12px 30px; display:flex; flex-direction:column; min-height:100vh; }
-  header { text-align:center; border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:8px; }
+  header { text-align:center; border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:8px; position:relative; }
+  .help-btn { position:absolute; top:0; right:2px; width:34px; height:34px; border-radius:50%; border:2px solid var(--line);
+    background:transparent; color:var(--muted); font-size:18px; font-weight:800; cursor:pointer; line-height:1; }
   header h1 { margin:0; font-size:24px; font-weight:900; letter-spacing:0.04em; }
   header h1 .g { color:var(--hit); } header h1 .o { color:var(--near); }
   header p { margin:4px 0 0; font-size:12px; color:var(--muted); }
@@ -65,6 +67,14 @@
   .copied { color:var(--accent); font-size:13px; font-weight:700; height:18px; }
   footer { text-align:center; color:var(--muted); font-size:11px; margin-top:14px; }
   footer a { color:var(--muted); }
+  .box.left { text-align:left; }
+  .howto-lead { font-size:15px; text-align:center; margin:2px 0 14px; }
+  .howto { margin:0 0 14px; padding-left:20px; font-size:14px; }
+  .howto li { margin:5px 0; }
+  .legend { display:flex; flex-direction:column; gap:9px; margin:0 0 16px; }
+  .lg { display:flex; align-items:center; gap:12px; font-size:14px; }
+  .tile.sm { width:40px; height:40px; font-size:22px; border-radius:7px; flex-shrink:0; }
+  .howto-note { font-size:12px; color:var(--muted); text-align:center; margin:0 0 16px; }
   [hidden] { display:none !important; }
 </style>
 </head>
@@ -73,6 +83,7 @@
   <header>
     <h1>ことば<span class="g">ア</span><span class="o">タ</span>ック</h1>
     <p>4文字のことばを6回で当てよう</p>
+    <button class="help-btn" id="helpBtn" aria-label="あそびかた">?</button>
   </header>
 
   <div class="msg" id="msg"></div>
@@ -84,6 +95,24 @@
     <p id="modeLabel"></p>
     <p>「AI CEO」プロジェクト運営／<a href="https://nc16e113-hue.github.io/ai-business-lab/tools.html" target="_blank" rel="noopener">他の無料コンテンツ</a></p>
   </footer>
+</div>
+
+<div class="modal" id="help" hidden>
+  <div class="box left">
+    <h2 style="text-align:center;">あそびかた</h2>
+    <p class="howto-lead">かくれた<b>4文字のことば</b>を<b>6回</b>いないに当てよう。</p>
+    <ol class="howto">
+      <li>下のかなボタンで4文字えらんで「けってい」</li>
+      <li>文字の色でヒントが出ます👇</li>
+    </ol>
+    <div class="legend">
+      <div class="lg"><span class="tile hit sm">こ</span><span>その文字が <b>その場所</b> にある</span></div>
+      <div class="lg"><span class="tile near sm">と</span><span>その文字は <b>あるけど場所ちがい</b></span></div>
+      <div class="lg"><span class="tile miss sm">ば</span><span>その文字は <b>ない</b></span></div>
+    </div>
+    <p class="howto-note">「今日のことば」は毎日かわります。結果は絵文字でシェアできる📲</p>
+    <button class="btn" id="helpClose">はじめる！</button>
+  </div>
 </div>
 
 <div class="modal" id="modal" hidden>
@@ -227,7 +256,15 @@
   document.getElementById("againBtn").addEventListener("click", ()=>init(false));
   document.addEventListener("keydown",(e)=>{ if(e.key==="Enter") submit(); else if(e.key==="Backspace") backspace(); });
 
+  // あそびかた（初回自動表示＋?ボタン）
+  const helpModal = document.getElementById("help");
+  document.getElementById("helpBtn").addEventListener("click", ()=>{ helpModal.hidden=false; });
+  document.getElementById("helpClose").addEventListener("click", ()=>{
+    helpModal.hidden=true; try{ localStorage.setItem("ka_seen","1"); }catch(e){}
+  });
+
   init(true);
+  try { if(!localStorage.getItem("ka_seen")) helpModal.hidden=false; } catch(e) { helpModal.hidden=false; }
 </script>
 </body>
 </html>
