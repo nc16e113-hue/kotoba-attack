@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ことばアタック｜4文字のことばを当てる無料パズルゲーム</title>
+<meta name="description" content="4文字のひらがな言葉を6回以内に当てる、無料の日本語パズルゲーム。毎日1問。結果は絵文字でシェアできます。登録不要。">
+<link rel="canonical" href="https://nc16e113-hue.github.io/kotoba-attack/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ことばアタック">
+<meta property="og:title" content="ことばアタック｜4文字のことばを当てるパズル">
+<meta property="og:description" content="4文字のひらがな言葉を6回以内に当てる無料パズル。毎日1問、結果は絵文字でシェアできます。">
+<meta property="og:url" content="https://nc16e113-hue.github.io/kotoba-attack/">
+<meta property="og:image" content="https://nc16e113-hue.github.io/kotoba-attack/assets/ogp.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ことばアタック｜4文字のことばを当てるパズル">
+<meta name="twitter:description" content="4文字のひらがな言葉を6回以内に当てる無料パズル。毎日1問、結果は絵文字でシェアできます。">
+<meta name="twitter:image" content="https://nc16e113-hue.github.io/kotoba-attack/assets/ogp.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🟩</text></svg>">
+<style>
+  :root {
+    --bg: #faf7f0; --text: #21303a; --muted: #6b7a83; --line: #dfe3e0;
+    --key: #e7ebe8; --key-text: #21303a;
+    --hit: #35b37e; --near: #f2a33c; --miss: #7b8a92; --tile-empty:#ffffff; --tile-border:#cfd6d2;
+    --accent: #199473;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#171d1b; --text:#eef2ef; --muted:#9fb0aa; --line:#2c3633;
+      --key:#2a3431; --key-text:#eef2ef; --tile-empty:#1e2624; --tile-border:#3a4642; }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; background:var(--bg); color:var(--text); min-height:100vh;
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Segoe UI", sans-serif; }
+  .wrap { max-width: 480px; margin:0 auto; padding: 14px 12px 30px; display:flex; flex-direction:column; min-height:100vh; }
+  header { text-align:center; border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:8px; }
+  header h1 { margin:0; font-size:24px; font-weight:900; letter-spacing:0.04em; }
+  header h1 .g { color:var(--hit); } header h1 .o { color:var(--near); }
+  header p { margin:4px 0 0; font-size:12px; color:var(--muted); }
+  .msg { text-align:center; min-height:24px; font-weight:700; font-size:14px; margin:6px 0; color:var(--accent); }
+  .board { display:grid; grid-template-rows:repeat(6, 1fr); gap:7px; justify-content:center; margin:6px auto 14px; }
+  .row { display:grid; grid-template-columns:repeat(4, 58px); gap:7px; }
+  .tile { width:58px; height:58px; border:2px solid var(--tile-border); background:var(--tile-empty);
+    display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:800; border-radius:8px;
+    transition: transform 0.1s; }
+  .tile.filled { border-color: var(--muted); }
+  .tile.hit { background:var(--hit); border-color:var(--hit); color:#fff; }
+  .tile.near { background:var(--near); border-color:var(--near); color:#fff; }
+  .tile.miss { background:var(--miss); border-color:var(--miss); color:#fff; }
+  .keyboard { margin-top:auto; display:flex; flex-direction:column; gap:6px; }
+  .krow { display:flex; gap:5px; justify-content:center; }
+  .key { flex:1; max-width:38px; height:46px; border:none; border-radius:7px; background:var(--key); color:var(--key-text);
+    font-size:17px; font-weight:700; cursor:pointer; }
+  .key.wide { max-width:72px; font-size:13px; font-weight:800; }
+  .key.hit { background:var(--hit); color:#fff; } .key.near { background:var(--near); color:#fff; } .key.miss { background:var(--miss); color:#fff; }
+  .key:active { transform: translateY(1px); }
+  .modal { position:fixed; inset:0; background:rgba(10,20,16,0.55); display:flex; align-items:center; justify-content:center; padding:20px; }
+  .modal .box { background:var(--bg); border-radius:20px; padding:26px 24px; max-width:360px; width:100%; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.3); }
+  .modal h2 { margin:0 0 6px; font-size:24px; }
+  .modal .answer { font-size:15px; color:var(--muted); margin:0 0 14px; }
+  .modal .grid { font-size:22px; line-height:1.3; letter-spacing:2px; margin:10px 0 18px; }
+  .btn { display:inline-block; border:none; cursor:pointer; background:var(--accent); color:#fff; font-size:16px; font-weight:800;
+    padding:14px 26px; border-radius:999px; text-decoration:none; width:100%; margin-bottom:10px; }
+  .btn.x { background:#000; }
+  .btn.ghost { background:transparent; color:var(--accent); border:2px solid var(--line); }
+  .copied { color:var(--accent); font-size:13px; font-weight:700; height:18px; }
+  footer { text-align:center; color:var(--muted); font-size:11px; margin-top:14px; }
+  footer a { color:var(--muted); }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ことば<span class="g">ア</span><span class="o">タ</span>ック</h1>
+    <p>4文字のことばを6回で当てよう</p>
+  </header>
+
+  <div class="msg" id="msg"></div>
+  <div class="board" id="board"></div>
+
+  <div class="keyboard" id="keyboard"></div>
+
+  <footer>
+    <p id="modeLabel"></p>
+    <p>「AI CEO」プロジェクト運営／<a href="https://nc16e113-hue.github.io/ai-business-lab/tools.html" target="_blank" rel="noopener">他の無料コンテンツ</a></p>
+  </footer>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <div class="box">
+    <h2 id="mTitle"></h2>
+    <p class="answer" id="mAnswer"></p>
+    <div class="grid" id="mGrid"></div>
+    <a class="btn x" id="shareX" target="_blank" rel="noopener">𝕏 で結果をシェア</a>
+    <div class="copied" id="copied"></div>
+    <button class="btn ghost" id="againBtn">もう1問あそぶ（練習）</button>
+  </div>
+</div>
+
+<script>
+  // 基本の言葉リスト（4文字・ひらがな・基本かなのみ）
+  const WORD_LIST = ["ひまわり","たいよう","あいさつ","せんせい","ひこうき","にわとり","おまつり","ゆうやけ","おはなみ","てるてる","くまのこ","かたかな","そらいろ","はなやか","しろくま","くろねこ","てあらい","しまうま","らいおん","やまのて"];
+
+  const KANA_ROWS = [
+    ["あ","い","う","え","お"],
+    ["か","き","く","け","こ"],
+    ["さ","し","す","せ","そ"],
+    ["た","ち","つ","て","と"],
+    ["な","に","ぬ","ね","の"],
+    ["は","ひ","ふ","へ","ほ"],
+    ["ま","み","む","め","も"],
+    ["や","ゆ","よ","ら","り"],
+    ["る","れ","ろ","わ","を","ん"],
+  ];
+
+  const LEN = 4, TRIES = 6;
+  let answer, row, col, board, guesses, keyState, over, dailyMode, dayNo;
+
+  const boardEl = document.getElementById("board");
+  const kbEl = document.getElementById("keyboard");
+  const msgEl = document.getElementById("msg");
+  const modal = document.getElementById("modal");
+
+  function todayIndex() {
+    const epoch = Date.UTC(2026,0,1);
+    const now = Date.now();
+    return Math.floor((now - epoch) / 86400000);
+  }
+
+  function init(daily) {
+    dailyMode = daily;
+    dayNo = todayIndex();
+    answer = daily ? WORD_LIST[((dayNo % WORD_LIST.length)+WORD_LIST.length)%WORD_LIST.length]
+                   : WORD_LIST[Math.floor(Math.random()*WORD_LIST.length)];
+    row = 0; col = 0; over = false;
+    board = Array.from({length:TRIES}, ()=>Array(LEN).fill(""));
+    guesses = [];
+    keyState = {};
+    document.getElementById("modeLabel").textContent = daily ? `今日のことば（No.${dayNo}）` : "練習モード";
+    renderBoard(); renderKeyboard(); msgEl.textContent = "";
+    modal.hidden = true;
+  }
+
+  function renderBoard() {
+    boardEl.innerHTML = "";
+    for (let r=0;r<TRIES;r++){
+      const rowEl = document.createElement("div"); rowEl.className="row";
+      for (let c=0;c<LEN;c++){
+        const t = document.createElement("div"); t.className="tile";
+        const ch = board[r][c];
+        if (ch) { t.textContent = ch; t.classList.add("filled"); }
+        if (guesses[r]) { t.classList.remove("filled"); t.classList.add(guesses[r][c]); }
+        rowEl.appendChild(t);
+      }
+      boardEl.appendChild(rowEl);
+    }
+  }
+
+  function renderKeyboard() {
+    kbEl.innerHTML = "";
+    KANA_ROWS.forEach(keys => {
+      const kr = document.createElement("div"); kr.className="krow";
+      keys.forEach(k => {
+        const b = document.createElement("button"); b.className="key"; b.textContent=k;
+        if (keyState[k]) b.classList.add(keyState[k]);
+        b.addEventListener("click", ()=>input(k));
+        kr.appendChild(b);
+      });
+      kbEl.appendChild(kr);
+    });
+    const ctrl = document.createElement("div"); ctrl.className="krow";
+    const del = document.createElement("button"); del.className="key wide"; del.textContent="けす";
+    del.addEventListener("click", backspace);
+    const ent = document.createElement("button"); ent.className="key wide"; ent.textContent="けってい";
+    ent.addEventListener("click", submit);
+    ctrl.appendChild(del); ctrl.appendChild(ent);
+    kbEl.appendChild(ctrl);
+  }
+
+  function input(k){ if(over||col>=LEN) return; board[row][col]=k; col++; renderBoard(); }
+  function backspace(){ if(over||col<=0) return; col--; board[row][col]=""; renderBoard(); }
+
+  function flash(t){ msgEl.textContent=t; }
+
+  function submit(){
+    if(over) return;
+    if(col<LEN){ flash("4文字いれてね"); return; }
+    const guess = board[row].join("");
+    const res = grade(guess, answer);
+    guesses[row] = res;
+    // update keyboard states (hit>near>miss)
+    for(let i=0;i<LEN;i++){
+      const k=board[row][i], s=res[i], cur=keyState[k];
+      if(s==="hit" || (s==="near"&&cur!=="hit") || (s==="miss"&&!cur)) keyState[k]=s;
+    }
+    renderBoard(); renderKeyboard();
+    if(guess===answer){ over=true; flash("せいかい！🎉"); setTimeout(()=>endGame(true),350); return; }
+    row++; col=0;
+    if(row>=TRIES){ over=true; setTimeout(()=>endGame(false),300); }
+    else flash("");
+  }
+
+  function grade(guess, ans){
+    const res=Array(LEN).fill("miss");
+    const a=ans.split(""), g=guess.split("");
+    const counts={};
+    for(let i=0;i<LEN;i++){ if(g[i]===a[i]) res[i]="hit"; else counts[a[i]]=(counts[a[i]]||0)+1; }
+    for(let i=0;i<LEN;i++){ if(res[i]==="hit") continue; if(counts[g[i]]>0){ res[i]="near"; counts[g[i]]--; } }
+    return res;
+  }
+
+  const EMO={hit:"🟩",near:"🟧",miss:"⬛"};
+  function endGame(win){
+    document.getElementById("mTitle").textContent = win ? `クリア！${row+1>TRIES?TRIES:row+1}回で正解 🎉` : "ざんねん…";
+    document.getElementById("mAnswer").textContent = `こたえ: ${answer}`;
+    const gridRows = guesses.filter(Boolean).map(r=>r.map(s=>EMO[s]).join("")).join("\n");
+    document.getElementById("mGrid").textContent = gridRows;
+    const tries = win ? `${guesses.filter(Boolean).length}/${TRIES}` : `X/${TRIES}`;
+    const head = dailyMode ? `ことばアタック No.${dayNo} ${tries}` : `ことばアタック（練習） ${tries}`;
+    const shareText = `${head}\n${gridRows}\n`;
+    document.getElementById("shareX").href =
+      `https://x.com/intent/post?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent("https://nc16e113-hue.github.io/kotoba-attack/")}`;
+    document.getElementById("copied").textContent="";
+    modal.hidden=false;
+  }
+
+  document.getElementById("againBtn").addEventListener("click", ()=>init(false));
+  document.addEventListener("keydown",(e)=>{ if(e.key==="Enter") submit(); else if(e.key==="Backspace") backspace(); });
+
+  init(true);
+</script>
+</body>
+</html>
