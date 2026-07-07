@@ -29,9 +29,12 @@
       --key:#2a3431; --key-text:#eef2ef; --tile-empty:#1e2624; --tile-border:#3a4642; }
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { margin:0; background:var(--bg); color:var(--text); min-height:100vh;
+  html,body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--text); overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
     font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", "Segoe UI", sans-serif; }
-  .wrap { max-width: 480px; margin:0 auto; padding: 14px 12px 30px; display:flex; flex-direction:column; min-height:100vh; }
+  #stage { width:460px; transform-origin: center center; flex:0 0 auto; }
+  .wrap { width: 460px; margin:0 auto; padding: 12px 12px 16px; display:flex; flex-direction:column; }
   header { text-align:center; border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:8px; position:relative; }
   .help-btn { position:absolute; top:0; right:2px; width:34px; height:34px; border-radius:50%; border:2px solid var(--line);
     background:transparent; color:var(--muted); font-size:18px; font-weight:800; cursor:pointer; line-height:1; }
@@ -39,20 +42,20 @@
   header h1 .g { color:var(--hit); } header h1 .o { color:var(--near); }
   header p { margin:4px 0 0; font-size:12px; color:var(--muted); }
   .msg { text-align:center; min-height:24px; font-weight:700; font-size:14px; margin:6px 0; color:var(--accent); }
-  .board { display:grid; grid-template-rows:repeat(6, 1fr); gap:7px; justify-content:center; margin:6px auto 14px; }
-  .row { display:grid; grid-template-columns:repeat(4, 58px); gap:7px; }
-  .tile { width:58px; height:58px; border:2px solid var(--tile-border); background:var(--tile-empty);
-    display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:800; border-radius:8px;
+  .board { display:grid; grid-template-rows:repeat(6, 1fr); gap:6px; justify-content:center; margin:4px auto 10px; }
+  .row { display:grid; grid-template-columns:repeat(4, 48px); gap:6px; }
+  .tile { width:48px; height:48px; border:2px solid var(--tile-border); background:var(--tile-empty);
+    display:flex; align-items:center; justify-content:center; font-size:25px; font-weight:800; border-radius:8px;
     transition: transform 0.1s; }
   .tile.filled { border-color: var(--muted); }
   .tile.hit { background:var(--hit); border-color:var(--hit); color:#fff; }
   .tile.near { background:var(--near); border-color:var(--near); color:#fff; }
   .tile.miss { background:var(--miss); border-color:var(--miss); color:#fff; }
-  .keyboard { margin-top:auto; display:flex; flex-direction:column; gap:6px; }
-  .krow { display:flex; gap:5px; justify-content:center; }
-  .key { flex:1; max-width:38px; height:46px; border:none; border-radius:7px; background:var(--key); color:var(--key-text);
-    font-size:17px; font-weight:700; cursor:pointer; }
-  .key.wide { max-width:72px; font-size:13px; font-weight:800; }
+  .keyboard { margin-top:12px; display:flex; flex-direction:column; gap:5px; }
+  .krow { display:flex; gap:4px; justify-content:center; }
+  .key { flex:1; max-width:44px; height:42px; border:none; border-radius:7px; background:var(--key); color:var(--key-text);
+    font-size:16px; font-weight:700; cursor:pointer; padding:0; }
+  .key.wide { max-width:96px; font-size:13px; font-weight:800; }
   .key.hit { background:var(--hit); color:#fff; } .key.near { background:var(--near); color:#fff; } .key.miss { background:var(--miss); color:#fff; }
   .key:active { transform: translateY(1px); }
   .modal { position:fixed; inset:0; background:rgba(10,20,16,0.55); display:flex; align-items:center; justify-content:center; padding:20px; }
@@ -81,6 +84,7 @@
 </style>
 </head>
 <body>
+<div id="stage">
 <div class="wrap">
   <header>
     <h1>ことば<span class="g">ア</span><span class="o">タ</span>ック</h1>
@@ -129,20 +133,29 @@
     <button class="btn ghost" id="againBtn">もう1問あそぶ（練習）</button>
   </div>
 </div>
+</div><!-- /#stage -->
 
 <script>
+  // 画面（埋め込み枠含む）に合わせてゲーム全体を自動スケール
+  const _stage = document.getElementById('stage');
+  function fitStage(){
+    if(!_stage) return;
+    const s = Math.min(window.innerWidth/_stage.offsetWidth, window.innerHeight/_stage.offsetHeight, 1.5);
+    _stage.style.transform = 'scale('+s+')';
+  }
+  window.addEventListener('resize', fitStage);
+  if(window.ResizeObserver){ new ResizeObserver(fitStage).observe(_stage); }
+  window.addEventListener('load', fitStage);
+  setTimeout(fitStage, 60);
+
   // 基本の言葉リスト（4文字・ひらがな・基本かなのみ）
   const WORD_LIST = ["ひまわり","たいよう","あいさつ","せんせい","ひこうき","にわとり","おまつり","ゆうやけ","おはなみ","てるてる","くまのこ","かたかな","そらいろ","はなやか","しろくま","くろねこ","てあらい","しまうま","らいおん","やまのて"];
 
   const KANA_ROWS = [
-    ["あ","い","う","え","お"],
-    ["か","き","く","け","こ"],
-    ["さ","し","す","せ","そ"],
-    ["た","ち","つ","て","と"],
-    ["な","に","ぬ","ね","の"],
-    ["は","ひ","ふ","へ","ほ"],
-    ["ま","み","む","め","も"],
-    ["や","ゆ","よ","ら","り"],
+    ["あ","い","う","え","お","か","き","く","け","こ"],
+    ["さ","し","す","せ","そ","た","ち","つ","て","と"],
+    ["な","に","ぬ","ね","の","は","ひ","ふ","へ","ほ"],
+    ["ま","み","む","め","も","や","ゆ","よ","ら","り"],
     ["る","れ","ろ","わ","を","ん"],
   ];
 
